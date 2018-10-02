@@ -25,7 +25,6 @@ class QMessage(object):
 
         self.poll_type = msg_dict['poll_type']
         value = msg_dict['value']
-
         self.from_uin = value['from_uin']
         self.msg_id = value['msg_id']
         self.msg_type = value['msg_type']
@@ -123,19 +122,10 @@ class GroupMsg(QMessage):
         """
         获取发送者昵称
         """
-
         info = self.bot.get_group_member_info(str(self.group_code), self.send_uin)
         if info:
             name = info.get('nick')
             return name
-        # qq_info = self.bot.get_group_member_info(str(self.group_code), self.send_uin)
-        # name_info = self.bot.search_group_members(self.src_group_id)
-
-
-        # for tmp in name_info:
-        #     if str(tmp.get('u')) == str(qq_info.get('nick')): # qq_info.get('nick') 实际上是qq号
-        #         return tmp.get('n', "")
-        # return ""
 
     @property
     def src_sender_id(self):
@@ -146,16 +136,19 @@ class GroupMsg(QMessage):
         member_list = self.bot.search_group_members(self.src_group_id)
         target_info = self.bot.get_group_member_info(str(self.group_code), self.send_uin)
         for info in member_list:
-            if info.get('n') == target_info.get('nick'):
-                result_list.append(str(info.get('u')))
+            if info.get('nick') == target_info.get('nick'):
+                if info.get('card') and target_info.get('card'):
+                    if info.get('card') == target_info.get('card'):
+                        result_list.append(str(info.get('uin')))
+                    else:
+                        break
+                else:
+                    result_list.append(str(info.get('uin')))
         if len(result_list) > 1:
-            raise IndexError('群内含有相同昵称的成员,获取真实QQ号失败')
+            raise IndexError('群内含有同名账号,获取真实QQ号失败')
         if len(result_list) == 0:
             return ""
         return result_list[0]
-        # qq_info = self.bot.get_group_member_info(str(self.group_code), self.send_uin)
-
-        # return str(qq_info.get('nick'))
 
 class DiscussMsg(QMessage):
     """

@@ -1,0 +1,3 @@
+plugin_tests
+smart_qq_bot
+smart_qq_plugins

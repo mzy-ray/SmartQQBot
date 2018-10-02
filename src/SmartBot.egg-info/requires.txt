@@ -1,0 +1,6 @@
+Pillow
+six>=1.10.0
+requests>=2.10.0
+
+[web]
+bottle>=0.12.0

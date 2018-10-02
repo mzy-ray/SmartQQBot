@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-satoru
 import re
 import os
 import random
@@ -7,7 +7,7 @@ import six
 
 from smart_qq_bot.logger import logger
 from smart_qq_bot.signals import (
-    on_all_message,
+    on_discuss_message,
     on_group_message,
 )
 
@@ -26,7 +26,7 @@ class TucaoCore(object):
         global TUCAO_PATH
         try:
             tucao_file_path = TUCAO_PATH + str(group_id) + ".tucao"
-            with open(tucao_file_path, "wb") as tucao_file:
+            with open(tucao_file_path, "w+") as tucao_file:
                 cPickle.dump(self.tucao_dict[str(group_id)], tucao_file)
             logger.info("RUNTIMELOG tucao saved. Now tucao list:  {0}".format(str(self.tucao_dict)))
         except Exception:
@@ -40,12 +40,11 @@ class TucaoCore(object):
         global TUCAO_PATH
         if str(group_id) in set(self.tucao_dict.keys()):
             return
-
         tucao_file_path = TUCAO_PATH + str(group_id) + ".tucao"
         if not os.path.isdir(TUCAO_PATH):
             os.makedirs(TUCAO_PATH)
         if not os.path.exists(tucao_file_path):
-            with open(tucao_file_path, "wb") as tmp:
+            with open(tucao_file_path, "w") as tmp:
                 tmp.close()
         with open(tucao_file_path, "rb") as tucao_file:
             try:
@@ -76,12 +75,15 @@ def tucao(msg, bot):
         value = str(match.group(3)).decode('utf8')
 
         if command == 'learn':
+            if "爱丽丝" in msg.content:
+                reply("对不起，咸鱼没有操作权限！")
+                return True
             if group_id not in core.tucao_dict:
                 core.load(group_id)
-            if key not in core.tucao_dict[group_id]:
-                core.tucao_dict[group_id][key] = [value]
-            elif value not in core.tucao_dict[group_id][key]:
+            if key in core.tucao_dict[group_id] and value not in core.tucao_dict[group_id][key]:
                 core.tucao_dict[group_id][key].append(value)
+            else:
+                core.tucao_dict[group_id][key] = [value]
             reply("学习成功！快对我说" + str(key) + "试试吧！")
             core.save(group_id)
             return True
@@ -95,7 +97,7 @@ def tucao(msg, bot):
     else:
         core.load(group_id)
         for key in list(core.tucao_dict[group_id].keys()):
-            if str(key) in msg.content and core.tucao_dict[group_id][key]:
+            if str(key) == msg.content and core.tucao_dict[group_id][key]:
                 logger.info("RUNTIMELOG tucao pattern detected, replying...")
                 reply(random.choice(core.tucao_dict[group_id][key]))
                 return True

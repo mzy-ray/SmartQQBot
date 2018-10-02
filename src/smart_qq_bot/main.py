@@ -4,7 +4,6 @@ import logging
 import os
 import socket
 import sys
-import threading
 
 from six import PY2
 from six import iteritems
@@ -55,16 +54,14 @@ def main_loop(no_gui=False, new_user=False, debug=False, http=False):
         clean_cookie()
     bot.login(no_gui)
     observer = MessageObserver(bot)
-
     for name, func in iteritems(bot_inited_registry):
         try:
-            t = threading.Thread(target=func, args=(bot,))
-            t.daemon = True
-            t.start()
+            func(bot)
         except Exception:
             logging.exception(
                 "Error occurs while loading plugin [%s]." % name
             )
+
     while True:
         try:
             msg_list = bot.check_msg()
@@ -77,7 +74,9 @@ def main_loop(no_gui=False, new_user=False, debug=False, http=False):
         except (socket.timeout, IOError):
             logger.warning("Message pooling timeout, retrying...")
         except NeedRelogin:
-            exit(0)
+            logger.warning("Need Relogin")
+            bot.login(no_gui=True)
+            # exit(0)
         except Exception:
             logger.exception("Exception occurs when checking msg.")
 
